@@ -95,12 +95,16 @@ class HU4DSTEMDelegate(object):
         process_row = ui.create_row_widget()
         normalize_button = ui.create_push_button_widget("Normalize")
         recenter_button = ui.create_push_button_widget("Recenter Patterns")
+        round_button = ui.create_push_button_widget("Round")
+        
 
         normalize_button.on_clicked = lambda: self.apply_processing(normalize=True)
         recenter_button.on_clicked = lambda: self.apply_processing(recenter=True)
+        round_button.on_clicked = lambda: self.apply_processing(round_data=True)
 
         process_row.add(normalize_button)
         process_row.add(recenter_button)
+        process_row.add(round_button)
         panel.add(process_row)
 
         ### Cutoff with Entry ###
@@ -136,6 +140,20 @@ class HU4DSTEMDelegate(object):
         bin_row.add(bin_button)
         panel.add(bin_row)
 
+        ### Multiply by Number ###
+        multiply_row = ui.create_row_widget()
+        multiply_row.add(ui.create_label_widget("Multiply:"))
+        multiply_input = ui.create_line_edit_widget()
+        multiply_input.text = "1.0"
+        multiply_button = ui.create_push_button_widget("Apply")
+        multiply_button.on_clicked = lambda: self.apply_processing(multiply=float(multiply_input.text))
+        multiply_row.add(multiply_input)
+        multiply_row.add(multiply_button)
+        panel.add(multiply_row)
+
+        ### Round Data ###
+        
+
         return panel
 
 
@@ -160,7 +178,7 @@ class HU4DSTEMDelegate(object):
 
     def process_4d_data(self, data_item, swap_axes=False, flip_ky=False, flip_kx=False, flip_y=False, flip_x=False,
                          crop_left=0, crop_right=0, crop_top=0, crop_bottom=0,
-                         normalize=False, recenter=False, cutoff_ratio=None, pad_k=0, bin=1):
+                         normalize=False, recenter=False, cutoff_ratio=None, pad_k=0, bin=1, multiply=None, round_data=False):
         data = np.array(data_item.data)
         is_3d= data.ndim == 3
         if is_3d:
@@ -169,8 +187,19 @@ class HU4DSTEMDelegate(object):
         metadata = data_item.metadata.copy()
         intensity_calibration=data_item.intensity_calibration
         dimensional_calibrations=data_item.dimensional_calibrations
-        print("\n\n\n", intensity_calibration)
-        print("\n\n\n", dimensional_calibrations)
+        #print("\n\n\n", intensity_calibration, intensity_calibration.scale)
+        print("\n\n\n", dimensional_calibrations, dimensional_calibrations[2].scale)
+        data[data<0]=0
+        
+        # Multiply Data
+        if multiply is not None:
+            data *= multiply
+            metadata["multiplied_by"] = multiply
+
+        # Round Data
+        if round_data:
+            data = np.round(data)
+            metadata["rounded"] = True
 
         # Apply transformations
         if flip_y:
@@ -206,8 +235,10 @@ class HU4DSTEMDelegate(object):
         # Normalize
         if normalize:
             ssum = np.sum(data, axis=(2, 3))
-            data /= np.mean(ssum)
+            rsc=1/np.mean(ssum)
+            data *=rsc
             metadata["normalized"] = True
+            intensity_calibration.scale*=1/rsc
 
         # Recenter Patterns
         if recenter:
@@ -245,6 +276,8 @@ class HU4DSTEMDelegate(object):
             data = data[:,:, :bin*(data.shape[2] // bin), :bin*(data.shape[3] // bin)]
             data= data.reshape(data.shape[0], data.shape[1], data.shape[2] // bin, bin, data.shape[3] // bin, bin ).sum(axis=(3,5))
             metadata["binning"] = bin
+            dimensional_calibrations[2].scale*=bin
+            dimensional_calibrations[3].scale*=bin
         if is_3d:
             data = data[0]
         processed_data = DataAndMetadata.new_data_and_metadata(data, metadata=metadata)
