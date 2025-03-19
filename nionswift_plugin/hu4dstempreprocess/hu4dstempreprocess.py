@@ -144,12 +144,17 @@ class HU4DSTEMDelegate(object):
         selected_data_item = document_controller.target_data_item
 
         if selected_data_item:
-            processed_data = self.process_4d_data(selected_data_item, **kwargs)
+            processed_data, dimensional_calibrations, intensity_calibration = self.process_4d_data(selected_data_item, **kwargs)
+            
+            
             if processed_data:
                 original_title = selected_data_item.title if hasattr(selected_data_item, 'title') else 'Untitled'
                 operation = ', '.join([key for key, value in kwargs.items() if value])
                 new_title = f"{original_title} - {operation}"
-                self.api.library.create_data_item_from_data(processed_data.data, title=new_title)
+                new_data_item=self.api.library.create_data_item_from_data_and_metadata(processed_data, title=new_title)
+                
+                new_data_item.set_dimensional_calibrations(dimensional_calibrations)
+                new_data_item.set_intensity_calibration(intensity_calibration)
         else:
             print("No dataset selected!")
 
@@ -162,6 +167,10 @@ class HU4DSTEMDelegate(object):
             data=data[None,:,:,:]
             
         metadata = data_item.metadata.copy()
+        intensity_calibration=data_item.intensity_calibration
+        dimensional_calibrations=data_item.dimensional_calibrations
+        print("\n\n\n", intensity_calibration)
+        print("\n\n\n", dimensional_calibrations)
 
         # Apply transformations
         if flip_y:
@@ -238,4 +247,7 @@ class HU4DSTEMDelegate(object):
             metadata["binning"] = bin
         if is_3d:
             data = data[0]
-        return DataAndMetadata.new_data_and_metadata(data, metadata=metadata)
+        processed_data = DataAndMetadata.new_data_and_metadata(data, metadata=metadata)
+        
+
+        return processed_data, dimensional_calibrations, intensity_calibration
