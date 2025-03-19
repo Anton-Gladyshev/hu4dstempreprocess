@@ -113,7 +113,7 @@ class HU4DSTEMDelegate(object):
         cut_input = ui.create_line_edit_widget()
         cut_input.text = "1.0"
         cut_button = ui.create_push_button_widget("Apply Cutoff")
-        cut_button.on_clicked = lambda: self.apply_processing(cutoff_ratio=float(cut_input.text))
+        cut_button.on_clicked = lambda: self.apply_processing(cutoff_ratio=float(eval(cut_input.text)))
         cut_row.add(cut_input)
         cut_row.add(cut_button)
         panel.add(cut_row)
@@ -146,7 +146,7 @@ class HU4DSTEMDelegate(object):
         multiply_input = ui.create_line_edit_widget()
         multiply_input.text = "1.0"
         multiply_button = ui.create_push_button_widget("Apply")
-        multiply_button.on_clicked = lambda: self.apply_processing(multiply=float(multiply_input.text))
+        multiply_button.on_clicked = lambda: self.apply_processing(multiply=float(eval((multiply_input.text))))
         multiply_row.add(multiply_input)
         multiply_row.add(multiply_button)
         panel.add(multiply_row)
@@ -173,6 +173,9 @@ class HU4DSTEMDelegate(object):
                 
                 new_data_item.set_dimensional_calibrations(dimensional_calibrations)
                 new_data_item.set_intensity_calibration(intensity_calibration)
+                document_controller = self.api.application.document_controllers[0]
+                document_controller.display_data_item(new_data_item)
+                document_controller.refresh()  # <-- Forces UI refresh if necessary
         else:
             print("No dataset selected!")
 
@@ -187,8 +190,6 @@ class HU4DSTEMDelegate(object):
         metadata = data_item.metadata.copy()
         intensity_calibration=data_item.intensity_calibration
         dimensional_calibrations=data_item.dimensional_calibrations
-        #print("\n\n\n", intensity_calibration, intensity_calibration.scale)
-        print("\n\n\n", dimensional_calibrations, dimensional_calibrations[2].scale)
         data[data<0]=0
         
         # Multiply Data
@@ -244,10 +245,12 @@ class HU4DSTEMDelegate(object):
         if recenter:
             x, y = np.arange(data.shape[3]), np.arange(data.shape[2])
             x, y = np.meshgrid(x - np.mean(x), y - np.mean(y), indexing="xy")
-            ssum = np.sum(data, axis=(2, 3))
-            comx = int(np.round(np.mean(np.sum(data * x[None, None, :, :], axis=(2, 3)) / ssum)))
-            comy = int(np.round(np.mean(np.sum(data * y[None, None, :, :], axis=(2, 3)) / ssum)))
+            md=np.mean(data, (0,1))
+            ssum = np.sum(md)
+            comx = int(np.round(np.sum(md * x) / ssum))
+            comy = int(np.round(np.sum(md * y) / ssum))
             data = np.roll(data, (-int(comy), -int(comx)), axis=(2, 3))
+            
             if comy>0:
                 data[:,:,-comy:,:]=0
             elif comy<0:
