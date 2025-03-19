@@ -245,8 +245,8 @@ class HU4DSTEMDelegate(object):
             x, y = np.arange(data.shape[3]), np.arange(data.shape[2])
             x, y = np.meshgrid(x - np.mean(x), y - np.mean(y), indexing="xy")
             ssum = np.sum(data, axis=(2, 3))
-            comx = np.round(np.mean(np.sum(data * x[None, None, :, :], axis=(2, 3)) / ssum))
-            comy = np.round(np.mean(np.sum(data * y[None, None, :, :], axis=(2, 3)) / ssum))
+            comx = int(np.round(np.mean(np.sum(data * x[None, None, :, :], axis=(2, 3)) / ssum)))
+            comy = int(np.round(np.mean(np.sum(data * y[None, None, :, :], axis=(2, 3)) / ssum)))
             data = np.roll(data, (-int(comy), -int(comx)), axis=(2, 3))
             if comy>0:
                 data[:,:,-comy:,:]=0
