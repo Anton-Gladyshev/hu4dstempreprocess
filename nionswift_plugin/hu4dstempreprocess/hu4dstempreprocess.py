@@ -28,11 +28,13 @@ class HU4DSTEMDelegate(object):
         self.panel_id = "HU4DSTEM-panel"
         self.panel_name = _("HU4DSTEM")
         self.panel_positions = ["left", "right"]
-        self.panel_position = "right"
+        self.panel_position = "left"
 
     def create_panel_widget(self, ui, document_window):
         panel = ui.create_column_widget()
-
+        panel.add_stretch()
+        print(panel.__dir__())
+        #print(panel._ColumnWidget__column_widget._Widget__behavior.properties.__dir__())
         ### Flip and Swap Options ###
        
         flip_x_button = ui.create_push_button_widget("Flip Rx")
@@ -53,6 +55,22 @@ class HU4DSTEMDelegate(object):
         flip_row.add(flip_ky_button)
         flip_row.add(swap_axes_button)
         panel.add(flip_row)
+
+        ### Other Processing ###
+        process_row = ui.create_row_widget()
+        normalize_button = ui.create_push_button_widget("Normalize")
+        recenter_button = ui.create_push_button_widget("Recenter Patterns")
+        round_button = ui.create_push_button_widget("Round")
+        
+
+        normalize_button.on_clicked = lambda: self.apply_processing(normalize=True)
+        recenter_button.on_clicked = lambda: self.apply_processing(recenter=True)
+        round_button.on_clicked = lambda: self.apply_processing(round_data=True)
+
+        process_row.add(normalize_button)
+        process_row.add(recenter_button)
+        process_row.add(round_button)
+        panel.add(process_row)
 
         ### Cropping ###
         def apply_crop():
@@ -91,65 +109,47 @@ class HU4DSTEMDelegate(object):
         crop_row.add(crop_button)
         panel.add(crop_row)
 
-        ### Other Processing ###
-        process_row = ui.create_row_widget()
-        normalize_button = ui.create_push_button_widget("Normalize")
-        recenter_button = ui.create_push_button_widget("Recenter Patterns")
-        round_button = ui.create_push_button_widget("Round")
-        
-
-        normalize_button.on_clicked = lambda: self.apply_processing(normalize=True)
-        recenter_button.on_clicked = lambda: self.apply_processing(recenter=True)
-        round_button.on_clicked = lambda: self.apply_processing(round_data=True)
-
-        process_row.add(normalize_button)
-        process_row.add(recenter_button)
-        process_row.add(round_button)
-        panel.add(process_row)
+       
 
         ### Cutoff with Entry ###
         cut_row = ui.create_row_widget()
-        cut_row.add(ui.create_label_widget("Zero beyond Cutoff:"))
         cut_input = ui.create_line_edit_widget()
-        cut_input.text = "1.0"
-        cut_button = ui.create_push_button_widget("Apply Cutoff")
+        cut_input._LineEditWidget__line_edit_widget._Widget__behavior.placeholder_text = "Cutoff in k-Space"
+        cut_button = ui.create_push_button_widget("Cutoff")
         cut_button.on_clicked = lambda: self.apply_processing(cutoff_ratio=float(eval(cut_input.text)))
         cut_row.add(cut_input)
         cut_row.add(cut_button)
-        panel.add(cut_row)
+        #äpanel.add(cut_row)
 
         ### Padding with Entry ###
-        pad_row = ui.create_row_widget()
-        pad_row.add(ui.create_label_widget("Padding Size:"))
         pad_input = ui.create_line_edit_widget()
-        pad_input.text = "0"
-        pad_button = ui.create_push_button_widget("Apply Padding")
+        pad_input._LineEditWidget__line_edit_widget._Widget__behavior.placeholder_text = "Padding in k-Space"
+
+        pad_button = ui.create_push_button_widget("Pad")
         pad_button.on_clicked = lambda: self.apply_processing(pad_k=int(pad_input.text))
-        pad_row.add(pad_input)
-        pad_row.add(pad_button)
-        panel.add(pad_row)
+        cut_row.add(pad_input)
+        cut_row.add(pad_button)
+        panel.add(cut_row)
 
         ### Binning with Entry ###
         bin_row = ui.create_row_widget()
-        bin_row.add(ui.create_label_widget("Binning Factor:"))
         bin_input = ui.create_line_edit_widget()
-        bin_input.text = "1"
-        bin_button = ui.create_push_button_widget("Apply Binning")
+        bin_input._LineEditWidget__line_edit_widget._Widget__behavior.placeholder_text = "Binning in k-Space"
+
+        bin_button = ui.create_push_button_widget("Bin")
         bin_button.on_clicked = lambda: self.apply_processing(bin=int(bin_input.text))
         bin_row.add(bin_input)
         bin_row.add(bin_button)
-        panel.add(bin_row)
 
         ### Multiply by Number ###
-        multiply_row = ui.create_row_widget()
-        multiply_row.add(ui.create_label_widget("Multiply:"))
         multiply_input = ui.create_line_edit_widget()
-        multiply_input.text = "1.0"
-        multiply_button = ui.create_push_button_widget("Apply")
+        multiply_input._LineEditWidget__line_edit_widget._Widget__behavior.placeholder_text = "Multiplier"
+        
+        multiply_button = ui.create_push_button_widget("Multiply")
         multiply_button.on_clicked = lambda: self.apply_processing(multiply=float(eval((multiply_input.text))))
-        multiply_row.add(multiply_input)
-        multiply_row.add(multiply_button)
-        panel.add(multiply_row)
+        bin_row.add(multiply_input)
+        bin_row.add(multiply_button)
+        panel.add(bin_row)
 
         ### Round Data ###
         
