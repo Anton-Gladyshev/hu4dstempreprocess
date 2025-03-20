@@ -82,7 +82,7 @@ class HU4DSTEMDelegate(object):
                 print("Invalid crop values")
         
         crop_row = ui.create_row_widget()
-        crop_row.add(ui.create_label_widget("Crop (Left, Right, Top, Bottom):"))
+        crop_row.add(ui.create_label_widget("Crop in k-Space (Left, Right, Top, Bottom):"))
         panel.add(crop_row)
         crop_row = ui.create_row_widget()
         crop_button = ui.create_push_button_widget("Apply Crop")
