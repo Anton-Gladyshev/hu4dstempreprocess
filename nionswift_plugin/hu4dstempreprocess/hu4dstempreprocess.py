@@ -172,7 +172,6 @@ class HU4DSTEMDelegate(object):
                 new_data_item.set_intensity_calibration(intensity_calibration)
                 document_controller = self.api.application.document_controllers[0]
                 document_controller.display_data_item(new_data_item)
-                document_controller.refresh()  # <-- Forces UI refresh if necessary
         else:
             print("No dataset selected!")
 
