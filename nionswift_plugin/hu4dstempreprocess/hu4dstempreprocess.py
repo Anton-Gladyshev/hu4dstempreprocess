@@ -33,9 +33,6 @@ class HU4DSTEMDelegate(object):
     def create_panel_widget(self, ui, document_window):
         panel = ui.create_column_widget()
         panel.add_stretch()
-        print(panel.__dir__())
-        #print(panel._ColumnWidget__column_widget._Widget__behavior.properties.__dir__())
-        ### Flip and Swap Options ###
        
         flip_x_button = ui.create_push_button_widget("Flip Rx")
         flip_y_button = ui.create_push_button_widget("Flip Ry")
