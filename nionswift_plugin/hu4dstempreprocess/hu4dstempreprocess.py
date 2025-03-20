@@ -110,22 +110,25 @@ class HU4DSTEMDelegate(object):
 
         ### Cutoff with Entry ###
         cut_row = ui.create_row_widget()
-        cut_input = ui.create_line_edit_widget()
-        cut_input._LineEditWidget__line_edit_widget._Widget__behavior.placeholder_text = "Cutoff in k-Space"
-        cut_button = ui.create_push_button_widget("Cutoff")
-        cut_button.on_clicked = lambda: self.apply_processing(cutoff_ratio=float(eval(cut_input.text)))
-        cut_row.add(cut_input)
-        cut_row.add(cut_button)
+        
         #äpanel.add(cut_row)
 
         ### Padding with Entry ###
         pad_input = ui.create_line_edit_widget()
         pad_input._LineEditWidget__line_edit_widget._Widget__behavior.placeholder_text = "Padding in k-Space"
-
         pad_button = ui.create_push_button_widget("Pad")
         pad_button.on_clicked = lambda: self.apply_processing(pad_k=int(pad_input.text))
         cut_row.add(pad_input)
         cut_row.add(pad_button)
+        
+        cut_input = ui.create_line_edit_widget()
+        cut_input._LineEditWidget__line_edit_widget._Widget__behavior.placeholder_text = "Cutoff in k-Space"
+        cut_button = ui.create_push_button_widget(" Cutoff ")
+        cut_button.on_clicked = lambda: self.apply_processing(cutoff_ratio=float(eval(cut_input.text)))
+        cut_row.add(cut_input)
+        cut_row.add(cut_button)
+        
+        
         panel.add(cut_row)
 
         ### Binning with Entry ###
