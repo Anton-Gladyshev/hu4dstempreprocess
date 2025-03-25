@@ -22,6 +22,7 @@ class HU4DSTEMExtension(object):
         self.__panel_ref.close()
         self.__panel_ref = None
 
+
 class HU4DSTEMDelegate(object):
     def __init__(self, api):
         self.api = api
@@ -31,9 +32,13 @@ class HU4DSTEMDelegate(object):
         self.panel_position = "left"
 
     def create_panel_widget(self, ui, document_window):
-        panel = ui.create_column_widget()
-        panel.add_stretch()
+ 
+
+        main_panel = ui.create_column_widget()
+        advanced_panel = ui.create_column_widget()
        
+        
+
         flip_x_button = ui.create_push_button_widget("Flip Rx")
         flip_y_button = ui.create_push_button_widget("Flip Ry")
         flip_kx_button = ui.create_push_button_widget("Flip Kx")
@@ -51,7 +56,7 @@ class HU4DSTEMDelegate(object):
         flip_row.add(flip_kx_button)
         flip_row.add(flip_ky_button)
         flip_row.add(swap_axes_button)
-        panel.add(flip_row)
+        main_panel.add(flip_row)
 
         ### Other Processing ###
         process_row = ui.create_row_widget()
@@ -59,7 +64,7 @@ class HU4DSTEMDelegate(object):
         recenter_button = ui.create_push_button_widget("Recenter Patterns")
         round_button = ui.create_push_button_widget("Round")
         
-
+        
         normalize_button.on_clicked = lambda: self.apply_processing(normalize=True)
         recenter_button.on_clicked = lambda: self.apply_processing(recenter=True)
         round_button.on_clicked = lambda: self.apply_processing(round_data=True)
@@ -67,53 +72,68 @@ class HU4DSTEMDelegate(object):
         process_row.add(normalize_button)
         process_row.add(recenter_button)
         process_row.add(round_button)
-        panel.add(process_row)
-
+        main_panel.add(process_row)
+        
         ### Cropping ###
         def apply_crop():
-            try:
-                self.apply_processing(
-                    crop_left=int(crop_left_input.text),
-                    crop_right=int(crop_right_input.text),
-                    crop_top=int(crop_top_input.text),
-                    crop_bottom=int(crop_bottom_input.text),
-                )
-            except ValueError:
-                print("Invalid crop values")
+            crop_left=int(crop_left_input.text) if crop_left_input.text!="" else 0
+            crop_right=int(crop_right_input.text) if crop_right_input.text!="" else 0
+            crop_top=int(crop_top_input.text) if crop_top_input.text!="" else 0
+            crop_bottom=int(crop_bottom_input.text) if crop_bottom_input.text!="" else 0
+            crop_regime = "k" if crop_selector.current_index == 0 else "r"
+            if crop_left>0 or crop_right>0 or crop_top>0 or crop_bottom>0:
+                try:
+                    self.apply_processing(
+                            crop_left=crop_left,
+                            crop_right=crop_right,
+                            crop_top=crop_top,
+                            crop_bottom=crop_bottom,
+                            crop_regime=crop_regime
+                        )
+                except ValueError:
+                    print("Invalid crop values")
+        
+        ######### Starting from here are the "advanced options"
+        
         
         crop_row = ui.create_row_widget()
-        crop_row.add(ui.create_label_widget("Crop in k-Space (Left, Right, Top, Bottom):"))
-        panel.add(crop_row)
-        crop_row = ui.create_row_widget()
-        crop_button = ui.create_push_button_widget("Apply Crop")
-        crop_button.on_clicked = apply_crop
+        
         crop_left_input = ui.create_line_edit_widget()
-        crop_left_input.text = "0"
+        crop_left_input._LineEditWidget__line_edit_widget._Widget__behavior.placeholder_text = "Crop Left"
+        #crop_left_input.text = "0"
         crop_row.add(crop_left_input)
         
         crop_right_input = ui.create_line_edit_widget()
-        crop_right_input.text = "0"
+        crop_right_input._LineEditWidget__line_edit_widget._Widget__behavior.placeholder_text = "Crop Right"
+        #crop_right_input.text = "0"
         crop_row.add(crop_right_input)
         
         crop_top_input = ui.create_line_edit_widget()
-        crop_top_input.text = "0"
+        crop_top_input._LineEditWidget__line_edit_widget._Widget__behavior.placeholder_text = "Crop Top"
+        #crop_top_input.text = "0"
         
         crop_row.add(crop_top_input)
         
         crop_bottom_input = ui.create_line_edit_widget()
-        crop_bottom_input.text = "0"
+        crop_bottom_input._LineEditWidget__line_edit_widget._Widget__behavior.placeholder_text = "Crop Bottom"
+        #crop_bottom_input.text = "0"
         crop_row.add(crop_bottom_input)
+        
+        advanced_panel.add(crop_row)
+        
+        crop_row = ui.create_row_widget()
+        #crop_row.add(ui.create_label_widget("Crop in k-Space (Left, Right, Top, Bottom):"))
+        
+        crop_selector = ui.create_combo_box_widget(["Crop in K-Space", "Crop in R-Space"])
+        crop_selector.current_index = 0
+        crop_row.add(crop_selector)
+        crop_button = ui.create_push_button_widget("Apply Crop")
+        crop_button.on_clicked = apply_crop
         crop_row.add(crop_button)
-        panel.add(crop_row)
-
-       
-
-        ### Cutoff with Entry ###
+        
+        advanced_panel.add(crop_row)
         cut_row = ui.create_row_widget()
         
-        #äpanel.add(cut_row)
-
-        ### Padding with Entry ###
         pad_input = ui.create_line_edit_widget()
         pad_input._LineEditWidget__line_edit_widget._Widget__behavior.placeholder_text = "Padding in k-Space"
         pad_button = ui.create_push_button_widget("Pad")
@@ -128,8 +148,7 @@ class HU4DSTEMDelegate(object):
         cut_row.add(cut_input)
         cut_row.add(cut_button)
         
-        
-        panel.add(cut_row)
+        advanced_panel.add(cut_row)
 
         ### Binning with Entry ###
         bin_row = ui.create_row_widget()
@@ -149,13 +168,14 @@ class HU4DSTEMDelegate(object):
         multiply_button.on_clicked = lambda: self.apply_processing(multiply=float(eval((multiply_input.text))))
         bin_row.add(multiply_input)
         bin_row.add(multiply_button)
-        panel.add(bin_row)
-
-        ### Round Data ###
-        
-
-        return panel
-
+        advanced_panel.add(bin_row)
+            
+        full = ui.create_column_widget()
+        full.add_stretch()
+        full.add(main_panel)
+        full.add(advanced_panel)
+        full.add_stretch()
+        return full
 
     def apply_processing(self, **kwargs):
         document_controller = self.api.application.document_controllers[0]
@@ -167,7 +187,13 @@ class HU4DSTEMDelegate(object):
             
             if processed_data:
                 original_title = selected_data_item.title if hasattr(selected_data_item, 'title') else 'Untitled'
-                operation = ', '.join([key for key, value in kwargs.items() if value])
+                operation= ''
+                for key, value in kwargs.items():
+                    if value:
+                        operation+=key+"=%s"%value
+                        if operation[-5:]=="=True": operation=operation[:-5];
+                        operation+=', '
+                operation=operation[:-2]
                 new_title = f"{original_title} - {operation}"
                 new_data_item=self.api.library.create_data_item_from_data_and_metadata(processed_data, title=new_title)
                 
@@ -179,7 +205,7 @@ class HU4DSTEMDelegate(object):
             print("No dataset selected!")
 
     def process_4d_data(self, data_item, swap_axes=False, flip_ky=False, flip_kx=False, flip_y=False, flip_x=False,
-                         crop_left=0, crop_right=0, crop_top=0, crop_bottom=0,
+                         crop_left=0, crop_right=0, crop_top=0, crop_bottom=0,crop_regime=None,
                          normalize=False, recenter=False, cutoff_ratio=None, pad_k=0, bin=1, multiply=None, round_data=False):
         data = np.array(data_item.data)
         is_3d= data.ndim == 3
@@ -219,18 +245,32 @@ class HU4DSTEMDelegate(object):
             metadata["swap_axes"] = True
 
         # Cropping
-        if crop_bottom > 0:
-            data = data[:, :, :-crop_bottom, :]
-            metadata["crop_bottom"] = crop_bottom
-        if crop_top > 0:
-            data = data[:, :, crop_top:, :]
-            metadata["crop_top"] = crop_top
-        if crop_left > 0:
-            data = data[:, :, :, crop_left:]
-            metadata["crop_left"] = crop_left
-        if crop_right > 0:
-            data = data[:, :, :, :-crop_right]
-            metadata["crop_right"] = crop_right
+        if crop_regime=="k":
+            if crop_bottom > 0:
+                data = data[:, :, :-crop_bottom, :]
+                metadata["crop_bottom"] = crop_bottom
+            if crop_top > 0:
+                data = data[:, :, crop_top:, :]
+                metadata["crop_top"] = crop_top
+            if crop_left > 0:
+                data = data[:, :, :, crop_left:]
+                metadata["crop_left"] = crop_left
+            if crop_right > 0:
+                data = data[:, :, :, :-crop_right]
+                metadata["crop_right"] = crop_right
+        elif crop_regime=="r":
+            if crop_bottom > 0:
+                data = data[:-crop_bottom, :, :, :,]
+                metadata["crop_bottom"] = crop_bottom
+            if crop_top > 0:
+                data = data[crop_top:, :, :, :]
+                metadata["crop_top"] = crop_top
+            if crop_left > 0:
+                data = data[:, crop_left:, :, :]
+                metadata["crop_left"] = crop_left
+            if crop_right > 0:
+                data = data[:, :-crop_right,:,:]
+                metadata["crop_right"] = crop_right
 
         # Normalize
         if normalize:
