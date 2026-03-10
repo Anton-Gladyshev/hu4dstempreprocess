@@ -43,19 +43,33 @@ class HU4DSTEMDelegate(object):
         flip_y_button = ui.create_push_button_widget("Flip Ry")
         flip_kx_button = ui.create_push_button_widget("Flip Kx")
         flip_ky_button = ui.create_push_button_widget("Flip Ky")
-        swap_axes_button = ui.create_push_button_widget("Swap Ky<->Kx")
+        #swap_axes_button = ui.create_push_button_widget("Swap Ky<->Kx")
+        
+        #swap_row= ui.create_row_widget()
+        sw1 = ui.create_line_edit_widget()
+        sw1._LineEditWidget__line_edit_widget._Widget__behavior.placeholder_text = "axis"
+        sw2 = ui.create_line_edit_widget()
+        sw2._LineEditWidget__line_edit_widget._Widget__behavior.placeholder_text = "axis"
+        swap_button = ui.create_push_button_widget("Swap Axes")
+        swap_button.on_clicked = lambda: self.apply_processing(swap_1=int(sw1.text), swap_2=int(sw2.text))
 
+      
+        
         flip_x_button.on_clicked = lambda: self.apply_processing(flip_x=True)
         flip_y_button.on_clicked = lambda: self.apply_processing(flip_y=True)
         flip_kx_button.on_clicked = lambda: self.apply_processing(flip_kx=True)
         flip_ky_button.on_clicked = lambda: self.apply_processing(flip_ky=True)
-        swap_axes_button.on_clicked = lambda: self.apply_processing(swap_axes=True)
+        #swap_axes_button.on_clicked = lambda: self.apply_processing(swap_axes=True)
         flip_row = ui.create_row_widget()
         flip_row.add(flip_x_button)
         flip_row.add(flip_y_button)
         flip_row.add(flip_kx_button)
         flip_row.add(flip_ky_button)
-        flip_row.add(swap_axes_button)
+        
+                
+        flip_row.add(sw1)
+        flip_row.add(sw2)
+        #flip_row.add(swap_axes_button)
         main_panel.add(flip_row)
 
         ### Other Processing ###
@@ -63,7 +77,7 @@ class HU4DSTEMDelegate(object):
         normalize_button = ui.create_push_button_widget("Normalize")
         recenter_button = ui.create_push_button_widget("Recenter Patterns")
         round_button = ui.create_push_button_widget("Round")
-        
+                
         
         normalize_button.on_clicked = lambda: self.apply_processing(normalize=True)
         recenter_button.on_clicked = lambda: self.apply_processing(recenter=True)
@@ -72,6 +86,7 @@ class HU4DSTEMDelegate(object):
         process_row.add(normalize_button)
         process_row.add(recenter_button)
         process_row.add(round_button)
+        process_row.add(swap_button)
         main_panel.add(process_row)
         
         ### Cropping ###
@@ -133,17 +148,6 @@ class HU4DSTEMDelegate(object):
         
         advanced_panel.add(crop_row)
         
-        swap_row= ui.create_row_widget()
-        sw1 = ui.create_line_edit_widget()
-        sw1._LineEditWidget__line_edit_widget._Widget__behavior.placeholder_text = "axis 1"
-        sw2 = ui.create_line_edit_widget()
-        sw2._LineEditWidget__line_edit_widget._Widget__behavior.placeholder_text = "axis 2"
-        swap_button = ui.create_push_button_widget("Swap Axes")
-        
-        swap_row.add(sw1)
-        swap_row.add(sw2)
-        swap_row.add(swap_button)
-        advanced_panel.add(swap_row)
         
         cut_row = ui.create_row_widget()
         
@@ -236,7 +240,7 @@ class HU4DSTEMDelegate(object):
             metadata["multiplied_by"] = multiply
         
         if not(swap_1 is None) and not(swap_2 is None):
-            data=np.swapaxes(data, 0,1)
+            data=np.swapaxes(data, swap_1,swap_2)
             metadata["swapaxes"]="%d<->%d"%(swap_1, swap_2)
         
         # Round Data
