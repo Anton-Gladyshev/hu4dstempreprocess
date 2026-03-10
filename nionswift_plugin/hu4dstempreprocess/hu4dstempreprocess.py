@@ -132,6 +132,19 @@ class HU4DSTEMDelegate(object):
         crop_row.add(crop_button)
         
         advanced_panel.add(crop_row)
+        
+        swap_row= ui.create_row_widget()
+        sw1 = ui.create_line_edit_widget()
+        sw1._LineEditWidget__line_edit_widget._Widget__behavior.placeholder_text = "axis 1"
+        sw2 = ui.create_line_edit_widget()
+        sw2._LineEditWidget__line_edit_widget._Widget__behavior.placeholder_text = "axis 2"
+        swap_button = ui.create_push_button_widget("Swap Axes")
+        
+        swap_row.add(sw1)
+        swap_row.add(sw2)
+        swap_row.add(swap_button)
+        advanced_panel.add(swap_row)
+        
         cut_row = ui.create_row_widget()
         
         pad_input = ui.create_line_edit_widget()
@@ -206,7 +219,7 @@ class HU4DSTEMDelegate(object):
 
     def process_4d_data(self, data_item, swap_axes=False, flip_ky=False, flip_kx=False, flip_y=False, flip_x=False,
                          crop_left=0, crop_right=0, crop_top=0, crop_bottom=0,crop_regime=None,
-                         normalize=False, recenter=False, cutoff_ratio=None, pad_k=0, bin=1, multiply=None, round_data=False):
+                         normalize=False, recenter=False, cutoff_ratio=None, pad_k=0, bin=1, multiply=None, round_data=False, swap_1=None, swap_2=None):
         data = np.array(data_item.data)
         is_3d= data.ndim == 3
         if is_3d:
@@ -221,7 +234,11 @@ class HU4DSTEMDelegate(object):
         if multiply is not None:
             data *= multiply
             metadata["multiplied_by"] = multiply
-
+        
+        if not(swap_1 is None) and not(swap_2 is None):
+            data=np.swapaxes(data, 0,1)
+            metadata["swapaxes"]="%d<->%d"%(swap_1, swap_2)
+        
         # Round Data
         if round_data:
             data = np.round(data)
